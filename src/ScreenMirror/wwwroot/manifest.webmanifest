@@ -1,0 +1,14 @@
+{
+  "name": "ScreenMirror",
+  "short_name": "ScreenMirror",
+  "description": "Use this device as a wireless display and touch controller for your PC.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0b0d12",
+  "theme_color": "#0b0d12",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

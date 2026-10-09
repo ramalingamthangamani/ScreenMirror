@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
+<meta name="theme-color" content="#0b0d12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ScreenMirror</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/client.css">
+</head>
+<body class="client">
+
+<!-- ============================================================ pairing -->
+<section id="pair" class="pair-screen" hidden>
+  <div class="card pair-card">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="4" width="15" height="11" rx="2"/><rect x="14" y="9" width="8" height="12" rx="2"/><path d="M6 19h6"/></svg></span>ScreenMirror</div>
+    <h1>Connect to your PC</h1>
+    <p class="muted">Scan the QR code in the ScreenMirror dashboard, or enter the 6-digit code it shows.</p>
+    <form id="pairForm" autocomplete="off">
+      <label class="field">Pairing code
+        <input id="code" class="code-input" inputmode="numeric" maxlength="6" placeholder="••••••" required>
+      </label>
+      <label class="field">This device's name
+        <input id="devName" maxlength="40" required>
+      </label>
+      <button class="btn primary block" id="pairBtn" type="submit">Pair</button>
+    </form>
+    <div class="divider"><span>or</span></div>
+    <button class="btn block" id="requestBtn" type="button">Ask the PC for access</button>
+    <p id="pairMsg" class="pair-msg" role="status"></p>
+  </div>
+</section>
+
+<!-- ============================================================ viewer -->
+<section id="viewer" hidden>
+  <canvas id="screen"></canvas>
+  <div id="cursor"><svg viewBox="0 0 16 24"><path d="M1 1v19l5-5 3.5 7.5 3-1.4L9 13.7h7z"/></svg></div>
+
+  <button id="hud" class="hud q-unknown" type="button" aria-label="Connection details">
+    <span class="dot"></span><span id="hudText">—</span>
+    <span id="hudBadge" class="hud-badge" hidden>View only</span>
+  </button>
+  <div id="hudDetail" class="hud-detail" hidden>
+    <div><small>Quality</small><b id="dQuality">—</b></div>
+    <div><small>Frame rate</small><b id="dFps">—</b></div>
+    <div><small>Latency</small><b id="dLat">—</b></div>
+    <div><small>Ping</small><b id="dPing">—</b></div>
+    <div><small>Bitrate</small><b id="dRate">—</b></div>
+    <div><small>Resolution</small><b id="dRes">—</b></div>
+  </div>
+
+  <button id="zoomReset" class="float-btn" type="button" hidden aria-label="Reset zoom">
+    <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/></svg>
+  </button>
+
+  <div id="overlay" class="overlay" hidden>
+    <div class="overlay-box">
+      <div class="spinner" id="spinner"></div>
+      <p id="overlayText">Connecting…</p>
+      <button class="btn sm" id="overlayBtn" type="button" hidden>Reconnect</button>
+    </div>
+  </div>
+
+  <nav id="toolbar" class="toolbar">
+    <button type="button" data-act="keyboard" aria-label="Keyboard"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M10 13h4M8 16h8"/></svg></button>
+    <button type="button" data-act="mode" aria-label="Input mode">
+      <svg class="i" id="iconTouch" viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10"/><path d="M12 9.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.5L4.3 15a1.5 1.5 0 0 1 2.4-1.8L9 15.5"/></svg>
+      <svg class="i" id="iconPad" viewBox="0 0 24 24" hidden><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 14h18M12 14v6"/></svg>
+      <span id="modeLabel">Touch</span>
+    </button>
+    <button type="button" data-act="pause" aria-label="Pause stream">
+      <svg class="i" id="iconPause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+      <svg class="i" id="iconPlay" viewBox="0 0 24 24" hidden><path d="M7 5l12 7-12 7z"/></svg>
+    </button>
+    <button type="button" data-act="fullscreen" id="fsBtn" aria-label="Fullscreen"><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button type="button" data-act="settings" aria-label="Settings"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg></button>
+    <button type="button" data-act="hide" aria-label="Hide toolbar"><svg class="i" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+  </nav>
+  <button id="grip" class="grip" type="button" hidden aria-label="Show toolbar"></button>
+
+  <div id="keybar" class="keybar" hidden>
+    <button type="button" data-mod="ctrl">Ctrl</button>
+    <button type="button" data-mod="alt">Alt</button>
+    <button type="button" data-mod="shift">Shift</button>
+    <button type="button" data-mod="meta">Win</button>
+    <button type="button" data-key="Escape">Esc</button>
+    <button type="button" data-key="Tab">Tab</button>
+    <button type="button" data-key="ArrowLeft">←</button>
+    <button type="button" data-key="ArrowUp">↑</button>
+    <button type="button" data-key="ArrowDown">↓</button>
+    <button type="button" data-key="ArrowRight">→</button>
+    <button type="button" data-key="Delete">Del</button>
+    <button type="button" data-key="Home">Home</button>
+    <button type="button" data-key="End">End</button>
+    <button type="button" data-key="PageUp">PgUp</button>
+    <button type="button" data-key="PageDown">PgDn</button>
+    <button type="button" data-combo="ctrl+c">Copy</button>
+    <button type="button" data-combo="ctrl+v">Paste</button>
+    <button type="button" data-combo="ctrl+z">Undo</button>
+    <button type="button" data-combo="alt+Tab">Alt+Tab</button>
+    <button type="button" data-key="F5">F5</button>
+    <button type="button" class="kb-close" data-act="keyboard-close" aria-label="Close keyboard"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <textarea id="kbd" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Keyboard input"></textarea>
+
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-panel card">
+      <div class="card-head"><h2>Settings</h2><button class="btn icon" type="button" data-act="sheet-close" aria-label="Close"><svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <label class="field">Screen<select id="monitorSel"></select></label>
+      <div class="sheet-row">
+        <div><b>Input mode</b><small id="modeHelp"></small></div>
+        <div class="seg" id="modeSeg"><button type="button" data-mode="touch">Touch</button><button type="button" data-mode="trackpad">Trackpad</button></div>
+      </div>
+      <div class="sheet-row">
+        <div><b>Trackpad speed</b><small>How far the pointer moves per swipe</small></div>
+        <input type="range" id="speed" min="0.5" max="4" step="0.1">
+      </div>
+      <div class="sheet-row">
+        <div><b>Show stats</b><small>FPS and latency in the corner</small></div>
+        <label class="switch"><input type="checkbox" id="statsToggle"><span></span></label>
+      </div>
+      <details class="gestures">
+        <summary>Gestures</summary>
+        <table>
+          <tr><th>Touch mode</th><td>Tap = click · Long-press = right-click · Drag = click-drag · Two-finger swipe = scroll · Pinch = zoom view</td></tr>
+          <tr><th>Trackpad mode</th><td>Swipe = move pointer · Tap = click · Two-finger tap = right-click · Hold, then move = drag · Two-finger swipe = scroll</td></tr>
+        </table>
+      </details>
+      <div class="sheet-foot">
+        <span class="muted" id="sheetInfo"></span>
+        <button class="btn sm danger" type="button" data-act="forget">Forget this PC</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+</section>
+
+<script src="/static/client.js"></script>
+</body>
+</html>

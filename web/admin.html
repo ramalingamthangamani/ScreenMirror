@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenMirror Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="admin">
+<div id="offline" class="offline-banner" hidden>ScreenMirror is not running. Start it on this PC — this page reconnects automatically.</div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="logo"><svg class="i" viewBox="0 0 24 24"><rect x="2" y="4" width="15" height="11" rx="2"/><rect x="14" y="9" width="8" height="12" rx="2"/><path d="M6 19h6"/></svg></span>ScreenMirror</div>
+    <span class="host" id="host"></span>
+    <span class="spacer"></span>
+    <span class="status"><span class="dot" id="statusDot"></span><span id="statusText">Connecting…</span></span>
+    <button class="btn" id="streamBtn" type="button"></button>
+  </div>
+</header>
+
+<main class="layout">
+  <div class="col">
+    <section class="card">
+      <div class="card-head"><h2>Connect a device</h2></div>
+      <div class="qr"><img id="qr" alt="QR code to open ScreenMirror on your phone"></div>
+      <div class="code">
+        <span class="digits mono" id="code">------</span>
+        <button class="btn icon" id="regen" type="button" title="New pairing code" aria-label="New pairing code"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.9-3.9M4 5v4h4M4 13a8 8 0 0 0 14.9 3.9M20 19v-4h-4"/></svg></button>
+      </div>
+      <div class="url-row"><span class="mono" id="url"></span><button class="btn sm" id="copy" type="button">Copy</button></div>
+      <label class="field" id="ipField" style="margin-top:12px" hidden>Network address<select id="ipSel"></select></label>
+      <ol class="steps">
+        <li>Connect your phone or tablet to the same Wi-Fi.</li>
+        <li>Scan the QR code with the camera, or open the address above.</li>
+        <li>It pairs automatically. Otherwise, enter the code.</li>
+      </ol>
+      <p class="hint" id="altUrl"></p>
+    </section>
+
+    <section class="card" id="requestsCard" hidden>
+      <div class="card-head"><h2>Access requests</h2></div>
+      <div id="requests"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Stream settings</h2><span class="pill" id="encode"></span></div>
+      <div class="setting">
+        <div class="lbl"><b>Frame rate</b><small>Upper limit, adapts to the network</small></div>
+        <div class="ctl"><div class="seg" id="fpsSeg"><button type="button" data-v="15">15</button><button type="button" data-v="30">30</button><button type="button" data-v="60">60</button></div></div>
+      </div>
+      <div class="setting">
+        <div class="lbl"><b>Image quality</b><small>Higher is sharper but uses more bandwidth</small></div>
+        <div class="ctl"><input type="range" id="quality" min="30" max="95" step="5"><span class="range-val" id="qualityVal"></span></div>
+      </div>
+      <div class="setting">
+        <div class="lbl"><b>Max resolution</b><small>Width of the stream</small></div>
+        <div class="ctl"><select id="maxWidth">
+          <option value="0">Native</option><option value="2560">2560 px</option><option value="1920">1920 px</option>
+          <option value="1600">1600 px</option><option value="1280">1280 px</option>
+        </select></div>
+      </div>
+      <div class="setting">
+        <div class="lbl"><b>Remote control</b><small>Let devices use the mouse and keyboard</small></div>
+        <div class="ctl"><label class="switch"><input type="checkbox" id="allowControl"><span></span></label></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="card">
+      <div class="card-head"><h2>Connected devices</h2><span class="pill" id="clientCount">0</span></div>
+      <div class="rows" id="clients"></div>
+      <div class="empty" id="clientsEmpty">No devices connected yet. Scan the QR code to start.</div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Paired devices</h2></div>
+      <div id="devices"></div>
+      <div class="empty" id="devicesEmpty">No paired devices.</div>
+    </section>
+  </div>
+</main>
+
+<script src="/static/admin.js"></script>
+</body>
+</html>
